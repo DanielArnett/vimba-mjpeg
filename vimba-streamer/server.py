@@ -42,10 +42,9 @@ class MjpegRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
 
         # Response headers (multipart)
-        self.send_header("Content-Type", "image/jpeg")
         for k, v in pymjpeg.request_headers().items():
             self.send_header(k, v) 
-        
+
         # Multipart content
         while (True):
             self.end_headers()
@@ -78,7 +77,7 @@ class MjpegServerBoss:
         self.image_data = ""
 
     def start_server (self):
-        self.httpd = MjpegServer(('', 8001), MjpegRequestHandler)
+        self.httpd = MjpegServer(('', 80), MjpegRequestHandler)
         try:
             self.t1 = threading.Thread(target=self.httpd.serve_forever)
             self.t1.daemon = True

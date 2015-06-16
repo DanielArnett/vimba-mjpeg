@@ -4,9 +4,9 @@ boundary = '--andycam'
 
 def request_headers():
     return {
+        'Content-Type': 'multipart/x-mixed-replace;boundary=%s' % boundary,
         'Cache-Control': 'no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0',
         'Connection': 'close',
-        'Content-Type': 'multipart/x-mixed-replace;boundary=%s' % boundary,
         'Expires': 'Mon, 3 Jan 2000 12:34:56 GMT',
         'Pragma': 'no-cache',
     }

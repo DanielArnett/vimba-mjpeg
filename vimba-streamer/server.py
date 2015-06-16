@@ -40,9 +40,12 @@ class MjpegRequestHandler(BaseHTTPRequestHandler):
         global LOOP_WAIT_TIME
 
         self.send_response(200)
+
         # Response headers (multipart)
+        self.send_header("Content-Type", "image/jpeg")
         for k, v in pymjpeg.request_headers().items():
             self.send_header(k, v) 
+        
         # Multipart content
         while (True):
             self.end_headers()

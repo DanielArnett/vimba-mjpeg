@@ -1,6 +1,14 @@
 # vimba-mjpeg
 This application is branched from pymba, a python wrapper for the Vimba DLL. To use this MJPEG server install pymba using the below instructions, enter the vimba-streamer directory, and run `./run.sh` to start the server. Then you can open the `stream-client.html` page to test the MJPEG server. To view the stream on another member of the local network copy the `stream-client.html` page to the other computer, and replace `localhost` in `<img src="http://localhost:80/cgi-bin/encoder?&GET_STREAM">` with the ip address of the server.
 
+# Dependencies
+setuptools 18.0.1 or greater. 
+Download from the bottom of https://pypi.python.org/pypi/setuptools#downloads 
+Enter the setuptools directory and run:
+`sudo python ez_setup.py build;sudo python ez_setup.py install`
+
+Python OpenCV, Numpy, and Scipy
+sudo apt-get install python-scipy python-numpy python-opencv
 
 # pymba
 

@@ -9,6 +9,8 @@ import StringIO
 import pymjpeg
 import Image
 import sys
+import PIL
+from PIL import Image
 
 from server import MjpegServerBoss
 
@@ -16,6 +18,26 @@ from server import MjpegServerBoss
 
 # start Vimba
 with Vimba() as vimba:
+    
+        
+    if "mono" in sys.argv:
+        greyscale = True
+    else:
+        greyscale = False
+    if "compressed" in sys.argv:
+        rescaleImage = True
+        IMAGE_WIDTH  = 512
+        IMAGE_HEIGHT = 512
+    else:
+        rescaleImage = False
+        IMAGE_WIDTH  = 1330
+        IMAGE_HEIGHT = 1330
+
+    print "Greyscale:", greyscale
+    print "Rescale:  ", rescaleImage
+    print "Width:    ", IMAGE_WIDTH
+    print "Height:   ", IMAGE_HEIGHT
+
     # get system object
     system = vimba.getSystem()
 
@@ -28,32 +50,33 @@ with Vimba() as vimba:
         system.runFeatureCommand("GeVDiscoveryAllOnce")
         time.sleep(0.2)
     cameraIds = vimba.getCameraIds()
+    selectedCameraID = cameraIds[0]
     for cameraId in cameraIds:
-        print 'Camera ID:', cameraId
+        print 'Camera ID: ', cameraId
 
     # get and open a camera
     try:
-        camera0 = vimba.getCamera(cameraIds[0])
+        camera0 = vimba.getCamera(selectedCameraID)
     except IndexError:
         print "No GigE Cameras Found. Check connections, IP, and Subnet then try again."
         sys.exit()
+    
     camera0.openCamera()
-
+    camera0.PixelFormat = "RGB8Packed"
     # list camera features
-    cameraFeatureNames = camera0.getFeatureNames()
-    # for name in cameraFeatureNames:
-    #     print 'Camera feature:', name
+    #cameraFeatureNames = camera0.getFeatureNames()
+    #for name in cameraFeatureNames:
+    #    print 'Camera feature:', name
 
     # read info of a camera feature
-    #featureInfo = camera0.getFeatureInfo('AcquisitionMode')
-    #for field in featInfo.getFieldNames():
-    #    print field, '--', getattr(featInfo, field)
+    #featureInfo = camera0.getFeatureInfo('PixelFormat')
+    #for field in featureInfo.getFieldNames():
+    #    print field, '--', getattr(featureInfo, field)
 
     # get the value of a feature
-    print camera0.AcquisitionMode
+    #print camera0.AcquisitionMode
 
     # set the value of a feature
-    camera0.AcquisitionMode = 'SingleFrame'
 
     # create new frames for the camera
     frame0 = camera0.getFrame()    # creates a frame
@@ -63,41 +86,42 @@ with Vimba() as vimba:
     frame0.announceFrame()
 
     # capture a camera image
-    # count = 0
+    count = 0
+    camera0.startCapture()
+    print "Stream Started!"
     while 1:
-        camera0.startCapture()
         frame0.queueFrameCapture()
         camera0.runFeatureCommand('AcquisitionStart')
         camera0.runFeatureCommand('AcquisitionStop')
         frame0.waitFrameCapture()
         
+        #a = frame0.getBufferByteData():
         # get image data...
-        imgData = frame0.getBufferByteData()
-        
-        # moreUsefulImgData = np.ndarray(buffer = frame0.getBufferByteData(),
         image_data = np.ndarray(buffer = frame0.getBufferByteData(),
                                        dtype = np.uint8,
                                        shape = (frame0.height,
-                                                frame0.width))
-        
+                                                frame0.width, frame0.pixel_bytes))
         img = scipy.misc.toimage(image_data)
+        img = img.rotate(90) 
+        # Save bitmap image locally
+        img.save("vimba-images/" + selectedCameraID + "_" + str(time.time()) + ".jpg", "JPEG")
+        
+        # Compress for UI
+        if rescaleImage == True:
+            img = img.resize((IMAGE_WIDTH, IMAGE_HEIGHT), PIL.Image.ANTIALIAS)
+        # Greyscale
+        if greyscale == True:
+            img = img.convert('L')
         output = StringIO.StringIO()
         img.save(output, "JPEG")
-
-        #img = Image.fromarray(imgData)
-        #output = StringIO.StringIO()
-        #img.save(output, "JPEG")
 
         contents=output.getvalue()
         output.close()
         # Send to server
-        # print imgData[:64]
         S.new_image_data(contents)
-        # rgb = cv2.cvtColor(moreUsefulImgData, cv2.COLOR_BAYER_RG2RGB)
-        # cv2.imwrite('foo{}.png'.format(count), rgb)
-        # print "image {} saved".format(count)
-        # count += 1
-        camera0.endCapture()
+        count += 1
+
+    camera0.endCapture()
     # clean up after capture
     camera0.revokeAllFrames()
 

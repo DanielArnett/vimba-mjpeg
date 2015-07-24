@@ -77,7 +77,7 @@ class MjpegServerBoss:
         self.image_data = ""
 
     def start_server (self):
-        self.httpd = MjpegServer(('', 80), MjpegRequestHandler)
+        self.httpd = MjpegServer(('', 8080), MjpegRequestHandler)
         try:
             self.t1 = threading.Thread(target=self.httpd.serve_forever)
             self.t1.daemon = True
